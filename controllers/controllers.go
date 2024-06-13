@@ -171,4 +171,41 @@ func SearchProduct() gin.HandlerFunc {
 	}
 }
 
-func SearchProductByQuery() gin.HandlerFunc {}
+func SearchProductByQuery() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var searchProducts []modules.Product
+		queryParam := c.Query("name")
+		if queryParam != "" {
+			log.Println("query is empty")
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, gin.H{"error": "query parameter is empty"})
+			c.Abort()
+			return
+		}
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		searchquerydb, err := ProductCollection.Find(ctx, bson.M{"product_name": bson.M{"$regex": queryParam}})
+
+		if err != nil {
+			c.IndentedJSON(404, "something went wrong")
+		}
+
+		err = searchquerydb.All(ctx, &searchProducts)
+		if err != nil {
+			log.Println(err)
+			c.IndentedJSON(400, "something went wrong")
+			return
+		}
+
+		defer searchquerydb.Close(ctx)
+
+		if err := searchquerydb.Err(); err != nil {
+			log.Println(err)
+			c.IndentedJSON(400, "invalid request")
+		}
+		defer cancel()
+
+		c.IndentedJSON(200, searchProducts)
+	}
+}
