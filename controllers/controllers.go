@@ -3,21 +3,37 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/alikhanMuslim/ecommerce/database"
 	"github.com/alikhanMuslim/ecommerce/modules"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 	"time"
 )
 
-func HashPassword(password string) string {
+var UserCollection *mongo.Collection = database.UserData(database.Client, "Users")
+var ProductCollection *mongo.Collection = database.UserData(database.Client, "Products")
+var Validate = validator.New()
 
+func HashPassword(password string) string {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	if err != nil {
+		log.Panic(err)
+	}
+	return string(bytes)
 }
 
 func VerifyPassword(userPassword string, givenPassword string) (bool, string) {
-
+	err := bcrypt.CompareHashAndPassword([]byte(userPassword), []byte(givenPassword))
+	if err != nil {
+		return false, "Login or Password Incorrect"
+	}
+	return true, ""
 }
 
 func SignUp() gin.HandlerFunc {
@@ -125,6 +141,34 @@ func Login() gin.HandlerFunc {
 
 func ProductViewerAdmin() gin.HandlerFunc {}
 
-func SearchProduct() gin.HandlerFunc {}
+func SearchProduct() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var productlist []modules.Product
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		cursor, err := ProductCollection.Find(ctx, bson.D{{}})
+		if err != nil {
+			c.IndentedJSON(http.StatusInternalServerError, "something went wrong")
+			return
+		}
+		err = cursor.All(ctx, &productlist)
+
+		if err != nil {
+			log.Println(err)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+		defer cursor.Close()
+
+		if err := cursor.Err(); err != nil {
+			log.Println(err)
+			c.IndentedJSON(400, "Invalid request")
+			return
+		}
+
+		c.IndentedJSON(200, productlist)
+	}
+}
 
 func SearchProductByQuery() gin.HandlerFunc {}
