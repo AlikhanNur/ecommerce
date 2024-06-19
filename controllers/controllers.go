@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/alikhanMuslim/ecommerce/database"
 	"github.com/alikhanMuslim/ecommerce/modules"
+	generate "github.com/alikhanMuslim/ecommerce/tokens"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson"
@@ -110,20 +111,21 @@ func Login() gin.HandlerFunc {
 		defer cancel()
 
 		var user modules.User
+		var founduser modules.User
 
 		if err := c.BindJSON(&user); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		err := UserCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&foundUser)
+		err := UserCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&founduser)
 		defer cancel()
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 			return
 		}
-		PasswordIsValid, msg := VerifyPassword(*user.Password, *foundUser.Password)
+		PasswordIsValid, msg := VerifyPassword(*user.Password, *founduser.Password)
 		defer cancel()
 
 		if !PasswordIsValid {
@@ -131,15 +133,34 @@ func Login() gin.HandlerFunc {
 			fmt.Println(msg)
 			return
 		}
-		token, refreshToken, _ := generate.TokenGenerator(*foundUser.Email, *foundUser.First_Name, *foundUser.Last_Name, user.User_ID)
+		token, refreshToken, _ := generate.TokenGenerator(*founduser.Email, *founduser.First_Name, *founduser.Last_Name, founduser.User_ID)
 		defer cancel()
-		generate.UpdateAllTokens(token, refreshToken, founderuser.User_Id)
+		generate.UpdateAllTokens(token, refreshToken, founduser.User_ID)
 
-		c.JSON(http.StatusFound, foundUser)
+		c.JSON(http.StatusFound, founduser)
 	}
 }
 
-func ProductViewerAdmin() gin.HandlerFunc {}
+func ProductViewerAdmin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		var products modules.Product
+		defer cancel()
+		if err := c.BindJSON(&products); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		products.Product_ID = primitive.NewObjectID()
+		_, anyerr := ProductCollection.InsertOne(ctx, products)
+		if anyerr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Not Created"})
+			return
+		}
+		defer cancel()
+		c.JSON(http.StatusOK, "Successfully added our Product Admin!!")
+	}
+
+}
 
 func SearchProduct() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -159,7 +180,7 @@ func SearchProduct() gin.HandlerFunc {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
-		defer cursor.Close()
+		defer cursor.Close(ctx)
 
 		if err := cursor.Err(); err != nil {
 			log.Println(err)

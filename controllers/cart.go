@@ -63,7 +63,7 @@ func (app *Application) AddToCart() gin.HandlerFunc {
 	}
 }
 
-func RemoveItem(app *Application) gin.HandlerFunc {
+func (app *Application) RemoveItem() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		productQueryID := c.Query("id")
 		if productQueryID == "" {
@@ -152,7 +152,7 @@ func (app *Application) BuyFromCart() gin.HandlerFunc {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
-		err := database.BuyItemFromCart(ctx, app.userCollection, userQueryID)
+		err := database.BuyItemFromCart(ctx, app.prodCollection, app.userCollection, userQueryID)
 
 		if err != nil {
 			c.IndentedJSON(http.StatusInternalServerError, err)

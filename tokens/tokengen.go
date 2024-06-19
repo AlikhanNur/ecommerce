@@ -73,7 +73,7 @@ func ValidateToken(signedToken string) (claims *SignedDetails, msg string) {
 	}
 	return claims, msg
 }
-func UpdateToken(signedToken string, signedrefreshToken string, userid string) {
+func UpdateAllTokens(signedToken string, signedrefreshToken string, userid string) {
 
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()

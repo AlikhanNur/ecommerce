@@ -10,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
 	"time"
-	"unicode"
 )
 
 func DeleteAddress() gin.HandlerFunc {
@@ -69,15 +68,15 @@ func EditHomeAddress() gin.HandlerFunc {
 
 		}
 		var editaddress modules.Address
-		if err := c.BindJSON(&editaddress); err != nil{
+		if err := c.BindJSON(&editaddress); err != nil {
 			c.IndentedJSON(http.StatusBadRequest, "internal server error")
 		}
 
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 		filter := bson.D{primitive.E{Key: "_id", Value: usert_id}}
-		update := bson.D{{Key: "$set", Value: bson.D{primitive.E{Key: "address.0.house_name", Value: editaddress.House}, {Key: "address.0.street", Value: editaddress.Street}, {Key: "address.0.city_name",Value: editaddress.City}, {Key: "address.0.pin", Value: editaddress.Pincode}}}}
-		_ ,err = UserCollection.Aggregate(ctx, filter, update)
+		update := bson.D{{Key: "$set", Value: bson.D{primitive.E{Key: "address.0.house_name", Value: editaddress.House}, {Key: "address.0.street", Value: editaddress.Street}, {Key: "address.0.city_name", Value: editaddress.City}, {Key: "address.0.pin", Value: editaddress.Pincode}}}}
+		_, err = UserCollection.UpdateOne(ctx, filter, update)
 		if err != nil {
 			c.IndentedJSON(500, "somethin went wrong")
 			return
@@ -105,18 +104,18 @@ func EditWorkAddress() gin.HandlerFunc {
 
 		}
 		var editaddress modules.Address
-		if err := c.BindJSON(&editaddress); err != nil{
+		if err := c.BindJSON(&editaddress); err != nil {
 			c.IndentedJSON(http.StatusBadRequest, "internal server error")
 		}
 
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 		filter := bson.D{primitive.E{Key: "_id", Value: usert_id}}
-		update := bson.D{{Key: "$set", Value: bson.D{primitive.E{Key: "address.1.house_name", Value: editaddress.House}, {Key: "address.1.street", Value: editaddress.Street}, {Key: "address.1.city_name",Value: editaddress.City}, {Key: "address.1.pin", Value: editaddress.Pincode}}}}
+		update := bson.D{{Key: "$set", Value: bson.D{primitive.E{Key: "address.1.house_name", Value: editaddress.House}, {Key: "address.1.street", Value: editaddress.Street}, {Key: "address.1.city_name", Value: editaddress.City}, {Key: "address.1.pin", Value: editaddress.Pincode}}}}
 
 		_, err = UserCollection.UpdateOne(ctx, filter, update)
 
-		if err != nil{
+		if err != nil {
 			c.IndentedJSON(500, "something went wrong")
 		}
 		defer cancel()
@@ -142,26 +141,26 @@ func AddAddress() gin.HandlerFunc {
 
 		var addresses modules.Address
 
-		addresses.Address_ID= primitive.NewObjectID()
+		addresses.Address_ID = primitive.NewObjectID()
 
 		if err = c.BindJSON(&addresses); err != nil {
 			c.IndentedJSON(http.StatusNotAcceptable, err.Error())
 		}
-		var ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 
-		match_filter := bson.D{{Key: "$match", Value: bson.D{primitive.E{Key:"_id", Value: address}}}}
-		unwind := bson.D{{Key: "$unwind", Value: bson.D{primitive.E{Key:"path", Value: "$address"}}}}
-		group := bson.D{{Key: "$group", Value: bson.D{primitive.E{Key:"_id", Value: "$address_id"}, {Key:"count", Value: bson.D{primitive.E{Key:"$sum", Value: 1}}}}}}
+		match_filter := bson.D{{Key: "$match", Value: bson.D{primitive.E{Key: "_id", Value: address}}}}
+		unwind := bson.D{{Key: "$unwind", Value: bson.D{primitive.E{Key: "path", Value: "$address"}}}}
+		group := bson.D{{Key: "$group", Value: bson.D{primitive.E{Key: "_id", Value: "$address_id"}, {Key: "count", Value: bson.D{primitive.E{Key: "$sum", Value: 1}}}}}}
 
 		pointcursor, err := UserCollection.Aggregate(ctx, mongo.Pipeline{match_filter, unwind, group})
-		if err != nil{
+		if err != nil {
 			c.IndentedJSON(500, "error internal server")
 		}
 
 		var addressinfo []bson.M
 
 		err = pointcursor.All(ctx, &addressinfo)
-		if err != nil{
+		if err != nil {
 			panic(err)
 		}
 
@@ -171,14 +170,14 @@ func AddAddress() gin.HandlerFunc {
 			size = count.(int32)
 
 		}
-		if size < 2{
-			filter := bson.D{primitive.E{Key:"_id", Value: address}}
-			update := bson.D{{Key: "$push", Value: bson.D{primitive.E{Key:"address", Value: addresses}}}}
+		if size < 2 {
+			filter := bson.D{primitive.E{Key: "_id", Value: address}}
+			update := bson.D{{Key: "$push", Value: bson.D{primitive.E{Key: "address", Value: addresses}}}}
 			_, err = UserCollection.UpdateOne(ctx, filter, update)
-			if err != nil{
+			if err != nil {
 				fmt.Println(err)
 			}
-		}else{
+		} else {
 			c.IndentedJSON(400, "not allowed")
 		}
 		defer cancel()
