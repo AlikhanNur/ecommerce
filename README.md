@@ -55,5 +55,11 @@ response
 }
 ```
 
+#### Login function api call POST request
+
+```http
+ http://localhost:8000/users/login
+```
+
 
 
