@@ -139,18 +139,113 @@ response:
 #### Search Product by regex function GET request
 
 ```http
-  http://localhost:8000/users/search?name=ip
+  http://localhost:8000/users/search?name=Ip
 ```
 response: 
 
 ```bash
- {
-  "Successfully added our Product Admin!!"
-}
+ [
+    {
+        "Product_ID": "667a9232102171563b3d9feb",
+        "product_name": "Iphone 15 pro max",
+        "price": 990,
+        "rating": 9,
+        "image": "iphone.jpg"
+    },
+    {
+        "Product_ID": "667a924f102171563b3d9fec",
+        "product_name": "Iphone 15 pro",
+        "price": 790,
+        "rating": 9,
+        "image": "iphonePro.jpg"
+    }
+]
+```
+
+### Adding the Products to the Cart (GET REQUEST)
+
+```http
+  http://localhost:8000/addtocart?id=xxxproduct_idxxx&userID=xxxxxxuser_idxxxxxx
+```
+
+response
+
+```bash
+  "successfully added to cart"
+```
+
+### Removing item from the Cart GET REQUEST
+
+```http
+ http://localhost:8000/removeitem?id=xxxxxxx&userID=xxxxxxxxxxxx
+```
+
+response 
+
+```bash
+  "successfully removed item"
+```
+
+### Listing the item in the users cart (GET REQUEST) and total price
+
+```http
+ http://localhost:8000/listcart?id=xxxxxxuser_idxxxxxxxxxx
+```
+response
+```bash
+  1980[
+    {
+        "Product_ID": "667a9232102171563b3d9feb",
+        "product_name": "Iphone 15 pro max",
+        "price": 990,
+        "rating": 9,
+        "image": "iphone.jpg"
+    },
+    {
+        "Product_ID": "667a9232102171563b3d9feb",
+        "product_name": "Iphone 15 pro max",
+        "price": 990,
+        "rating": 9,
+        "image": "iphone.jpg"
+    }
+]
 ```
 
 
+### Addding the Address (POST REQUEST)
 
+```http
+ http://localhost:8000/addadress?id=user_id**\*\***\***\*\***
+```
+response
+```bash
+  address added
+```
+
+### Editing the Home Address(PUT REQUEST)
+```http
+ http://localhost:8000/edithomeaddress?id=xxxxxxxxxxuser_idxxxxxxxxxxxxxxx
+```
+
+### Editing the Work Address(PUT REQUEST)
+```http
+ http://localhost:8000/editworkaddress?id=xxxxxxxxxxuser_idxxxxxxxxxxxxxxx
+```
+
+### Delete Addresses(GET REQUEST)
+```http
+ http://localhost:8000/deleteaddresses?id=xxxxxxxxxuser_idxxxxxxxxxxxxx
+```
+
+### Cart Checkout Function and placing the order(GET REQUEST)
+```http
+ http://localhost:8000cartcheckout?id=xxuser_idxxx
+```
+
+### Instantly Buying the Products(GET REQUEST)
+```http
+http://localhost:8000?userid=xxuser_idxxx&pid=xxxxproduct_idxxxx
+```
 
 
 
