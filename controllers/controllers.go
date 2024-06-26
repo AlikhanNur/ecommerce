@@ -3,6 +3,10 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/alikhanMuslim/ecommerce/database"
 	"github.com/alikhanMuslim/ecommerce/modules"
 	generate "github.com/alikhanMuslim/ecommerce/tokens"
@@ -12,9 +16,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
-	"log"
-	"net/http"
-	"time"
 )
 
 var UserCollection *mongo.Collection = database.UserData(database.Client, "Users")
@@ -30,7 +31,7 @@ func HashPassword(password string) string {
 }
 
 func VerifyPassword(userPassword string, givenPassword string) (bool, string) {
-	err := bcrypt.CompareHashAndPassword([]byte(userPassword), []byte(givenPassword))
+	err := bcrypt.CompareHashAndPassword([]byte(givenPassword), []byte(userPassword))
 	if err != nil {
 		return false, "Login or Password Incorrect"
 	}
@@ -101,7 +102,7 @@ func SignUp() gin.HandlerFunc {
 		}
 		defer cancel()
 
-		c.JSON(http.StatusCreated, gin.H{"user": user})
+		c.JSON(http.StatusCreated, gin.H{"Response": "Successfully Signed Up!!"})
 	}
 }
 
@@ -196,7 +197,7 @@ func SearchProductByQuery() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var searchProducts []modules.Product
 		queryParam := c.Query("name")
-		if queryParam != "" {
+		if queryParam == "" {
 			log.Println("query is empty")
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, gin.H{"error": "query parameter is empty"})

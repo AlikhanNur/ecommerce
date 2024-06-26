@@ -3,13 +3,14 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/alikhanMuslim/ecommerce/modules"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"net/http"
-	"time"
 )
 
 func DeleteAddress() gin.HandlerFunc {
@@ -182,5 +183,7 @@ func AddAddress() gin.HandlerFunc {
 		}
 		defer cancel()
 		ctx.Done()
+
+		c.IndentedJSON(200, gin.H{"Address": address})
 	}
 }
